@@ -1,0 +1,268 @@
+"""Core bacterial colony counting logic (OpenCV).
+
+Pure functions, no UI and no I/O. The Streamlit layer in app.py feeds an
+image (numpy BGR array) plus a ColonyParams object and gets back a
+ColonyResult with the count, an annotated image and per-colony data.
+
+Pipeline: resize -> grayscale -> CLAHE -> blur -> threshold -> morphology
+-> (optional) watershed to split touching colonies -> area filtering.
+"""
+
+from __future__ import annotations
+
+import io
+import math
+from dataclasses import dataclass, field
+
+import cv2
+import numpy as np
+from PIL import Image, ImageOps
+
+
+@dataclass
+class ColonyParams:
+    """User-tunable detection settings (see the Streamlit sidebar)."""
+
+    blur_kernel: int = 5
+    threshold_method: str = "otsu"  # "otsu" | "adaptive"
+    adaptive_block: int = 51
+    adaptive_c: int = 3
+    invert: bool = False  # True when colonies are darker than the agar
+    min_area: float = 15.0
+    max_area: float = 0.0  # 0 = no upper limit
+    morph_open: int = 3  # remove isolated noise pixels (<=2 disables)
+    morph_close: int = 5  # fill small holes (<=2 disables)
+    separate: str = "watershed"  # "watershed" | "none"
+    min_distance: int = 5  # minimum colony radius used to seed watershed
+    max_dim: int = 1200  # longest side used for processing speed
+    show_mask: bool = False
+    show_ids: bool = True
+
+
+@dataclass
+class ColonyResult:
+    count: int
+    annotated_bgr: np.ndarray
+    mask: np.ndarray
+    colonies: list = field(default_factory=list)  # list of (area, cx, cy)
+    areas: list = field(default_factory=list)
+
+
+def load_image(data: bytes):
+    """Decode image bytes to a BGR numpy array, honouring EXIF rotation.
+
+    Returns None if the bytes are not a readable image.
+    """
+    try:
+        with Image.open(io.BytesIO(data)) as img:
+            img = ImageOps.exif_transpose(img)
+            rgb = img.convert("RGB")
+            arr = np.array(rgb)
+        return cv2.cvtColor(arr, cv2.COLOR_RGB2BGR)
+    except Exception:
+        return None
+
+
+def _resize_max(img: np.ndarray, max_dim: int) -> np.ndarray:
+    h, w = img.shape[:2]
+    longest = max(h, w)
+    if longest <= max_dim or max_dim <= 0:
+        return img
+    scale = max_dim / longest
+    return cv2.resize(
+        img, (int(round(w * scale)), int(round(h * scale))), interpolation=cv2.INTER_AREA
+    )
+
+
+def _preprocess(gray: np.ndarray, params: ColonyParams) -> np.ndarray:
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    out = clahe.apply(gray)
+    k = params.blur_kernel if params.blur_kernel % 2 == 1 else params.blur_kernel + 1
+    if k >= 3:
+        out = cv2.GaussianBlur(out, (k, k), 0)
+    return out
+
+
+def _threshold(prep: np.ndarray, params: ColonyParams) -> np.ndarray:
+    if params.threshold_method == "adaptive":
+        block = max(3, params.adaptive_block)
+        if block % 2 == 0:
+            block += 1
+        kind = cv2.THRESH_BINARY_INV if params.invert else cv2.THRESH_BINARY
+        return cv2.adaptiveThreshold(
+            prep, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, kind, block, params.adaptive_c
+        )
+    _, mask = cv2.threshold(prep, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    if params.invert:
+        mask = cv2.bitwise_not(mask)
+    return mask
+
+
+def _kernel(size: int) -> np.ndarray:
+    return cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (size, size))
+
+
+def _morph(mask: np.ndarray, params: ColonyParams) -> np.ndarray:
+    if params.morph_open >= 3:
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, _kernel(params.morph_open))
+    if params.morph_close >= 3:
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, _kernel(params.morph_close))
+    return mask
+
+
+def _passes_area(area: float, params: ColonyParams) -> bool:
+    if area < params.min_area:
+        return False
+    if params.max_area and area > params.max_area:
+        return False
+    return True
+
+
+def _count_simple(mask: np.ndarray, params: ColonyParams) -> list:
+    num, _labels, stats, centroids = cv2.connectedComponentsWithStats(mask, connectivity=8)
+    colonies = []
+    for i in range(1, num):
+        area = float(stats[i, cv2.CC_STAT_AREA])
+        if not _passes_area(area, params):
+            continue
+        colonies.append((area, float(centroids[i][0]), float(centroids[i][1])))
+    return colonies
+
+
+def _count_watershed(mask: np.ndarray, params: ColonyParams) -> list:
+    dist = cv2.distanceTransform(mask, cv2.DIST_L2, 5)
+    radius = max(1.0, float(params.min_distance))
+    _, seeds = cv2.threshold(dist, radius, 255.0, cv2.THRESH_BINARY)
+    seeds = seeds.astype(np.uint8)
+
+    num_seeds, markers = cv2.connectedComponents(seeds, connectivity=8)
+    if num_seeds <= 1:
+        return _count_simple(mask, params)
+
+    markers = (markers + 1).astype(np.int32)
+    background = cv2.dilate(mask, _kernel(3), iterations=2)
+    unknown = cv2.subtract(background, seeds)
+    markers[unknown == 255] = 0
+
+    cv2.watershed(cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR), markers)
+
+    colonies = []
+    for label in range(2, int(markers.max()) + 1):
+        ys, xs = np.nonzero(markers == label)
+        area = float(xs.size)
+        if not _passes_area(area, params):
+            continue
+        colonies.append((area, float(xs.mean()), float(ys.mean())))
+    return colonies
+
+
+def annotate(
+    img_bgr: np.ndarray,
+    colonies: list,
+    mask: np.ndarray | None = None,
+    show_ids: bool = True,
+) -> np.ndarray:
+    out = img_bgr.copy()
+    if mask is not None:
+        overlay = out.copy()
+        overlay[mask > 0] = (0, 200, 0)
+        out = cv2.addWeighted(overlay, 0.35, out, 0.65, 0)
+    for index, (area, cx, cy) in enumerate(colonies, start=1):
+        radius = int(max(4, math.sqrt(max(area, 1.0) / math.pi)))
+        center = (int(round(cx)), int(round(cy)))
+        cv2.circle(out, center, radius, (0, 0, 255), 2, cv2.LINE_AA)
+        if show_ids:
+            cv2.putText(
+                out,
+                str(index),
+                (center[0] - 6, center[1] - radius - 4),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.4,
+                (255, 255, 0),
+                1,
+                cv2.LINE_AA,
+            )
+    return out
+
+
+def count_colonies(img_bgr: np.ndarray, params: ColonyParams) -> ColonyResult:
+    work = _resize_max(img_bgr, params.max_dim)
+    gray = cv2.cvtColor(work, cv2.COLOR_BGR2GRAY)
+    prep = _preprocess(gray, params)
+    mask = _morph(_threshold(prep, params), params)
+
+    if params.separate == "watershed":
+        colonies = _count_watershed(mask, params)
+    else:
+        colonies = _count_simple(mask, params)
+
+    annotated = annotate(
+        work, colonies, mask=mask if params.show_mask else None, show_ids=params.show_ids
+    )
+    areas = [c[0] for c in colonies]
+    return ColonyResult(
+        count=len(colonies),
+        annotated_bgr=annotated,
+        mask=mask,
+        colonies=colonies,
+        areas=areas,
+    )
+
+
+def bgr_to_rgb(img_bgr: np.ndarray) -> np.ndarray:
+    return cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+
+
+def encode_png(img_bgr: np.ndarray) -> bytes:
+    ok, buffer = cv2.imencode(".png", img_bgr)
+    if not ok:
+        raise RuntimeError("Failed to encode the annotated image.")
+    return buffer.tobytes()
+
+
+def make_demo_plate(seed: int | None = None, size: int = 1024):
+    """Synthesise an agar-plate photo so the app can be tested without a lab.
+
+    Returns (bgr_image, ground_truth_count). Colonies are brighter than the
+    agar, so the default settings detect them.
+    """
+    rng = np.random.default_rng(seed)
+    size = int(size)
+
+    agar = (
+        120 + int(rng.integers(-10, 10)),
+        145 + int(rng.integers(-10, 10)),
+        125 + int(rng.integers(-10, 10)),
+    )
+    img = np.full((size, size, 3), agar, np.uint8)  # agar fills the frame
+
+    total = 0
+    target = int(rng.integers(25, 70))
+    center = size // 2
+    plate_radius = int(size * 0.46)
+    placed = []
+    attempts = 0
+    while total < target and attempts < target * 200:
+        attempts += 1
+        angle = rng.uniform(0, 2 * math.pi)
+        dist = rng.uniform(0, plate_radius - 20)
+        cx = int(center + dist * math.cos(angle))
+        cy = int(center + dist * math.sin(angle))
+        radius = int(rng.integers(5, 15))
+        if any((cx - px) ** 2 + (cy - py) ** 2 < (radius + pr + 6) ** 2 for px, py, pr in placed):
+            continue
+        shade = int(rng.integers(210, 250))
+        cv2.circle(img, (cx, cy), radius, (shade, shade, shade), -1, cv2.LINE_AA)
+        placed.append((cx, cy, radius))
+        total += 1
+
+    noise = rng.normal(0, 5, img.shape).astype(np.int16)
+    img = np.clip(img.astype(np.int16) + noise, 0, 255).astype(np.uint8)
+    return img, total
+
+
+if __name__ == "__main__":
+    # Quick self-test: generate a demo plate and confirm the count is close.
+    demo, truth = make_demo_plate(seed=1)
+    result = count_colonies(demo, ColonyParams())
+    print(f"ground truth: {truth}  detected: {result.count}")

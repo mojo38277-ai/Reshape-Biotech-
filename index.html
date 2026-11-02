@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reshape Biotech — Bacterial Identification</title>
+    <meta name="description" content="Identify bacteria from test results with an interactive dichotomous key, smart scoring, image gallery, and offline PWA support.">
+    <meta name="theme-color" content="#0f1026">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Reshape Biotech">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="logo.svg">
+    <link rel="apple-touch-icon" href="logo.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<header class="app-header lablaps-style">
+    <div class="header-shell">
+        <div class="brand-bar">
+            <img src="logo.svg" alt="Reshape Biotech logo" class="brand-logo">
+            <div class="brand-text">
+                <div class="brand-name">Reshape Biotech</div>
+                <div class="brand-tag">AI Operating System for Microbiology Labs</div>
+            </div>
+        </div>
+
+        <nav class="mode-nav lablaps-nav" aria-label="Main menu">
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <button type="button" class="nav-link active" data-mode="results">
+                        <span class="mode-icon">🧪</span>
+                        <span class="mode-label">Test Results</span>
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button type="button" class="nav-link" data-mode="history">
+                        <span class="mode-icon">🕒</span>
+                        <span class="mode-label">History</span>
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button type="button" class="nav-link" data-mode="tree">
+                        <span class="mode-icon">🌳</span>
+                        <span class="mode-label">Dichotomous Tree</span>
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button type="button" class="nav-link" data-mode="gallery">
+                        <span class="mode-icon">🖼️</span>
+                        <span class="mode-label">Image Gallery</span>
+                    </button>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="header-actions-bar">
+            <button type="button" id="open-glossary-btn" class="ghost-btn nav-link">📚 Glossary</button>
+            <button type="button" id="open-refs-btn" class="ghost-btn nav-link">📖 References</button>
+        </div>
+    </div>
+
+    <div class="header-content">
+        <h1>Bacterial Identification</h1>
+        <p class="subtitle">Identify bacteria from your test results with smart suggestions and explanations</p>
+    </div>
+</header>
+    <main class="app-container">
+        <section class="card" id="results-card">
+            <div class="card-header">
+                <h2>Enter Your Test Results</h2>
+                <div class="header-actions">
+                    <button type="button" id="clear-tests-btn" class="ghost-btn">Clear All</button>
+                    <button type="button" id="identify-btn" class="primary-btn">Identify Bacteria</button>
+                </div>
+            </div>
+            <p class="card-subtitle">Select what you observed. Leave blank if unknown/not tested.</p>
+
+            <div class="test-sections">
+                <section class="test-section">
+                    <h3>Microscopy &amp; Growth</h3>
+                    <div class="test-grid">
+                        <div class="test-item">
+                            <label for="gram">Gram Stain <span class="info-icon" data-tip="gram">ⓘ</span></label>
+                            <select id="gram">
+                                <option value="">Not tested</option>
+                                <option value="gp">Gram-positive</option>
+                                <option value="gn">Gram-negative</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="morph">Morphology <span class="info-icon" data-tip="morph">ⓘ</span></label>
+                            <select id="morph">
+                                <option value="">Not tested</option>
+                                <option value="cocci">Cocci (spherical)</option>
+                                <option value="bacilli">Bacilli/Rods</option>
+                                <option value="coccobacilli">Coccobacilli</option>
+                                <option value="diplococci">Diplococci</option>
+                                <option value="clusters">In clusters</option>
+                                <option value="chains">In chains</option>
+                                <option value="pairs">In pairs</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="hemolysis">Hemolysis (Blood Agar) <span class="info-icon" data-tip="hemolysis">ⓘ</span></label>
+                            <select id="hemolysis">
+                                <option value="">Not tested</option>
+                                <option value="beta">Beta (complete)</option>
+                                <option value="alpha">Alpha (partial)</option>
+                                <option value="gamma">Gamma (none)</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="spores">Endospores <span class="info-icon" data-tip="spores">ⓘ</span></label>
+                            <select id="spores">
+                                <option value="">Not tested</option>
+                                <option value="pos">Present (+)</option>
+                                <option value="neg">Absent (-)</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="test-section">
+                    <h3>Enzymatic &amp; Rapid Tests</h3>
+                    <div class="test-grid">
+                        <div class="test-item">
+                            <label for="catalase">Catalase <span class="info-icon" data-tip="catalase">ⓘ</span></label>
+                            <select id="catalase">
+                                <option value="">Not tested</option>
+                                <option value="pos">Positive (+)</option>
+                                <option value="neg">Negative (-)</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="oxidase">Oxidase <span class="info-icon" data-tip="oxidase">ⓘ</span></label>
+                            <select id="oxidase">
+                                <option value="">Not tested</option>
+                                <option value="pos">Positive (+)</option>
+                                <option value="neg">Negative (-)</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="coagulase">Coagulase <span class="info-icon" data-tip="coagulase">ⓘ</span></label>
+                            <select id="coagulase">
+                                <option value="">Not tested</option>
+                                <option value="pos">Positive (+)</option>
+                                <option value="neg">Negative (-)</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="urease">Urease <span class="info-icon" data-tip="urease">ⓘ</span></label>
+                            <select id="urease">
+                                <option value="">Not tested</option>
+                                <option value="pos">Positive (+)</option>
+                                <option value="neg">Negative (-)</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="pyr">PYR <span class="info-icon" data-tip="pyr">ⓘ</span></label>
+                            <select id="pyr">
+                                <option value="">Not tested</option>
+                                <option value="pos">Positive (+)</option>
+                                <option value="neg">Negative (-)</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="optochin">Optochin Sensitivity <span class="info-icon" data-tip="optochin">ⓘ</span></label>
+                            <select id="optochin">
+                                <option value="">Not tested</option>
+                                <option value="s">Sensitive</option>
+                                <option value="r">Resistant</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="bacitracin">Bacitracin Sensitivity <span class="info-icon" data-tip="bacitracin">ⓘ</span></label>
+                            <select id="bacitracin">
+                                <option value="">Not tested</option>
+                                <option value="s">Sensitive</option>
+                                <option value="r">Resistant</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="test-section">
+                    <h3>Media &amp; Colony Appearance</h3>
+                    <div class="test-grid">
+                        <div class="test-item">
+                            <label for="mac">MacConkey Agar <span class="info-icon" data-tip="mac">ⓘ</span></label>
+                            <select id="mac">
+                                <option value="">Not tested</option>
+                                <option value="lf">Lactose fermenter (pink)</option>
+                                <option value="nlf">Non-lactose fermenter (colorless)</option>
+                                <option value="ng">No growth</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="emb">EMB Agar</label>
+                            <select id="emb">
+                                <option value="">Not tested</option>
+                                <option value="metallic_green">Metallic green sheen</option>
+                                <option value="purple">Purple colonies</option>
+                                <option value="colorless">Colorless/NLF</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="ss">SS Agar</label>
+                            <select id="ss">
+                                <option value="">Not tested</option>
+                                <option value="colorless_black">Colorless with black centers</option>
+                                <option value="colorless">Colorless</option>
+                                <option value="pink">Pink/red</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="xld">XLD Agar</label>
+                            <select id="xld">
+                                <option value="">Not tested</option>
+                                <option value="red_black">Red with black centers</option>
+                                <option value="yellow">Yellow</option>
+                                <option value="red">Red</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="msa">MSA (Mannitol Salt)</label>
+                            <select id="msa">
+                                <option value="">Not tested</option>
+                                <option value="yellow">Yellow (mannitol +)</option>
+                                <option value="pink">Pink/red (mannitol -)</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="cna">CNA Agar <span class="info-icon" data-tip="cna">ⓘ</span></label>
+                            <select id="cna">
+                                <option value="">Not tested</option>
+                                <option value="growth">Growth</option>
+                                <option value="no_growth">No growth</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="chocolate">Chocolate Agar <span class="info-icon" data-tip="chocolate">ⓘ</span></label>
+                            <select id="chocolate">
+                                <option value="">Not tested</option>
+                                <option value="growth">Growth</option>
+                                <option value="no_growth">No growth</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="hek">Hektoen Enteric Agar <span class="info-icon" data-tip="hek">ⓘ</span></label>
+                            <select id="hek">
+                                <option value="">Not tested</option>
+                                <option value="blue_green">Blue-green (lactose fermenter)</option>
+                                <option value="salmonella_black">Blue-green with black centers</option>
+                                <option value="colorless">Colorless</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="tsi">Triple Sugar Iron (TSI) <span class="info-icon" data-tip="tsi">ⓘ</span></label>
+                            <select id="tsi">
+                                <option value="">Not tested</option>
+                                <option value="k_a">K/A (glucose only)</option>
+                                <option value="a_a">A/A (lactose/sucrose)</option>
+                                <option value="k_nc">K/NC (no change)</option>
+                                <option value="h2s">H2S (black precipitate)</option>
+                                <option value="gas">Gas production</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="ldc">Lysine Decarboxylase <span class="info-icon" data-tip="ldc">ⓘ</span></label>
+                            <select id="ldc">
+                                <option value="">Not tested</option>
+                                <option value="pos">Positive (purple)</option>
+                                <option value="neg">Negative (yellow)</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="tcbs">TCBS Agar <span class="info-icon" data-tip="tcbs">ⓘ</span></label>
+                            <select id="tcbs">
+                                <option value="">Not tested</option>
+                                <option value="yellow">Yellow (sucrose +)</option>
+                                <option value="green">Green/blue (sucrose -)</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="pigment">Pigment/Odor</label>
+                            <select id="pigment">
+                                <option value="">Not tested</option>
+                                <option value="pyocyanin">Blue-green (pyocyanin)</option>
+                                <option value="grape">Grape-like odor</option>
+                                <option value="mucoid">Mucoid colonies</option>
+                                <option value="swarming">Swarming</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="test-section">
+                    <h3>Biochemical &amp; Other</h3>
+                    <div class="test-grid">
+                        <div class="test-item">
+                            <label for="indole">Indole <span class="info-icon" data-tip="indole">ⓘ</span></label>
+                            <select id="indole">
+                                <option value="">Not tested</option>
+                                <option value="pos">Positive (+)</option>
+                                <option value="neg">Negative (-)</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="mr">Methyl Red (MR) <span class="info-icon" data-tip="mr">ⓘ</span></label>
+                            <select id="mr">
+                                <option value="">Not tested</option>
+                                <option value="pos">Positive (+)</option>
+                                <option value="neg">Negative (-)</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="vp">Voges-Proskauer (VP) <span class="info-icon" data-tip="vp">ⓘ</span></label>
+                            <select id="vp">
+                                <option value="">Not tested</option>
+                                <option value="pos">Positive (+)</option>
+                                <option value="neg">Negative (-)</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="citrate">Citrate <span class="info-icon" data-tip="citrate">ⓘ</span></label>
+                            <select id="citrate">
+                                <option value="">Not tested</option>
+                                <option value="pos">Positive (+)</option>
+                                <option value="neg">Negative (-)</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="adh">Arginine Dihydrolase (ADH) <span class="info-icon" data-tip="adh">ⓘ</span></label>
+                            <select id="adh">
+                                <option value="">Not tested</option>
+                                <option value="pos">Positive (+)</option>
+                                <option value="neg">Negative (-)</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="nitrate">Nitrate Reductase (NR) <span class="info-icon" data-tip="nitrate">ⓘ</span></label>
+                            <select id="nitrate">
+                                <option value="">Not tested</option>
+                                <option value="pos">Positive (+)</option>
+                                <option value="neg">Negative (-)</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="h2s">H₂S Production <span class="info-icon" data-tip="h2s">ⓘ</span></label>
+                            <select id="h2s">
+                                <option value="">Not tested</option>
+                                <option value="pos">Positive (+)</option>
+                                <option value="neg">Negative (-)</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="motility">Motility <span class="info-icon" data-tip="motility">ⓘ</span></label>
+                            <select id="motility">
+                                <option value="">Not tested</option>
+                                <option value="pos">Positive (+)</option>
+                                <option value="neg">Negative (-)</option>
+                                <option value="swarming">Swarming</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="bileesculin">Bile Esculin <span class="info-icon" data-tip="bileesculin">ⓘ</span></label>
+                            <select id="bileesculin">
+                                <option value="">Not tested</option>
+                                <option value="pos">Positive (+)</option>
+                                <option value="neg">Negative (-)</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="nacl">Growth in 6.5% NaCl <span class="info-icon" data-tip="nacl">ⓘ</span></label>
+                            <select id="nacl">
+                                <option value="">Not tested</option>
+                                <option value="pos">Positive (+)</option>
+                                <option value="neg">Negative (-)</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="pda">Phenylalanine Deaminase (PDA) <span class="info-icon" data-tip="pda">ⓘ</span></label>
+                            <select id="pda">
+                                <option value="">Not tested</option>
+                                <option value="pos">Positive (+)</option>
+                                <option value="neg">Negative (-)</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="results-panel" id="match-results" hidden>
+                <div class="match-header">
+                    <h3>Ranked Matches</h3>
+                    <p class="match-subtitle">Based on your entered test results. Higher score = better match.</p>
+                </div>
+                <div class="export-bar">
+                    <button type="button" id="copy-summary-btn" class="ghost-btn">Copy Summary</button>
+                    <button type="button" id="download-json-btn" class="ghost-btn">Download JSON</button>
+                    <button type="button" id="download-csv-btn" class="ghost-btn">Download CSV</button>
+                    <button type="button" id="print-btn" class="ghost-btn">Print</button>
+                    <button type="button" id="save-history-btn" class="ghost-btn">💾 Save to History</button>
+                </div>
+                <div class="matches-list" id="matches-list"></div>
+                <div class="next-tests" id="next-tests-section" hidden>
+                    <h4>Suggested Next Tests to Discriminate</h4>
+                    <p class="next-tests-subtitle">These tests will help separate the top matches.</p>
+                    <ul id="next-tests-list"></ul>
+                </div>
+                <div class="disclaimer">
+                    <strong>Disclaimer:</strong> This is an educational orientation tool, not a definitive clinical
+                    identification. Always confirm with standard laboratory methods.
+                </div>
+            </div>
+        </section>
+
+        <section class="card" id="history-card" hidden>
+            <div class="card-header">
+                <h2>Identification History</h2>
+                <div class="header-actions">
+                    <button type="button" id="clear-history-btn" class="ghost-btn">Clear All History</button>
+                </div>
+            </div>
+            <p class="card-subtitle">Saved identifications (stored locally on this device)</p>
+            <div class="history-list" id="history-list"></div>
+            <div class="history-empty" id="history-empty" hidden>No history yet. Run an identification and save it.</div>
+        </section>
+
+        <section class="card" id="tree-card" hidden>
+            <div class="card-header">
+                <h2>Dichotomous Tree</h2>
+                <div class="header-actions">
+                    <button type="button" id="reset-btn" class="ghost-btn">Reset</button>
+                    <button type="button" id="back-btn" class="ghost-btn" disabled>Back</button>
+                </div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <div class="path-list" id="path-list" aria-live="polite" aria-label="Selected tests and answers"></div>
+            <div class="question-area" id="question-area" aria-live="polite">
+                <h3 id="question-text"></h3>
+                <div class="options" id="options"></div>
+                <p class="helper-text" id="helper-text"></p>
+            </div>
+            <div class="result-area" id="result-area" hidden>
+                <div class="result-header">
+                    <span class="result-badge">Probable Identification</span>
+                    <h3 id="result-name"></h3>
+                </div>
+                <p class="result-description" id="result-description"></p>
+                <div class="result-details">
+                    <h4>Key Features</h4>
+                    <ul id="result-features"></ul>
+                </div>
+                <div class="result-notes">
+                    <h4>Important Notes</h4>
+                    <p id="result-notes"></p>
+                </div>
+                <div class="disclaimer">
+                    <strong>Disclaimer:</strong> This is an educational orientation key, not a definitive clinical identification.
+                </div>
+                <button type="button" id="restart-btn" class="primary-btn">Start New Identification</button>
+            </div>
+        </section>
+
+        <section class="card" id="gallery-card" hidden>
+            <div class="card-header">
+                <h2>Image Gallery</h2>
+                <div class="header-actions">
+                    <input type="text" id="gallery-search" class="gallery-search" placeholder="Search organisms...">
+                    <button type="button" id="gallery-filter-all" class="ghost-btn">All</button>
+                    <button type="button" id="gallery-filter-gp" class="ghost-btn">Gram+</button>
+                    <button type="button" id="gallery-filter-gn" class="ghost-btn">Gram-</button>
+                </div>
+            </div>
+            <p class="card-subtitle">Reference colony and Gram-stain style images for common isolates.</p>
+            <div class="gallery-grid" id="gallery-grid"></div>
+            <div class="gallery-empty" id="gallery-empty" hidden>No organisms match your filter.</div>
+        </section>
+
+        <aside class="side-panel">
+            <section class="card">
+                <div class="card-header">
+                    <h2>How to Use</h2>
+                </div>
+                <ul class="guide-list">
+                    <li><strong>Test Panel:</strong> Enter results you already have. Click "Identify Bacteria" for ranked matches.</li>
+                    <li><strong>Why this match?:</strong> Expand each result to see how it was scored.</li>
+                    <li><strong>Next Tests:</strong> Get smart suggestions to separate close matches.</li>
+                    <li><strong>Export/History:</strong> Save or download results for your lab notes.</li>
+                    <li><strong>Tree Mode:</strong> Use the dichotomous tree if you prefer step-by-step.</li>
+                </ul>
+            </section>
+            <section class="card">
+                <div class="card-header">
+                    <h2>Quick Tips</h2>
+                </div>
+                <ul class="guide-list">
+                    <li>More tests = higher confidence</li>
+                    <li>Key tests (Gram, catalase, oxidase, coagulase) carry more weight</li>
+                    <li>Leave fields as "Not tested" if unknown</li>
+                    <li>Watch for conflicts in the breakdown</li>
+                </ul>
+            </section>
+        </aside>
+    </main>
+
+    <footer class="app-footer">
+        <p>Educational tool for microbiology orientation. Results are probabilistic and require confirmation.</p>
+    </footer>
+
+    <!-- References Modal -->
+    <div id="references-modal" class="modal" hidden>
+        <div class="modal-backdrop" id="references-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>References &amp; Image Credits</h2>
+                <button type="button" id="close-refs-btn" class="ghost-btn">✕ Close</button>
+            </div>
+            <div class="modal-body">
+                <div class="refs-section">
+                    <h3>Image Sources</h3>
+                    <p class="refs-note">All gallery images are sourced from public-domain / openly licensed repositories (CDC Public Health Image Library, NIAID, Wikimedia Commons). Each card shows its attribution credit.</p>
+                    <ul class="refs-list">
+                        <li><strong>CDC</strong> — Centers for Disease Control and Prevention, Public Health Image Library (PHIL). Public domain U.S. government work.</li>
+                        <li><strong>NIAID</strong> — National Institute of Allergy and Infectious Diseases, NIH. Images via Flickr/Wikimedia Commons (CC BY 2.0 / public domain).</li>
+                        <li><strong>Wikimedia Commons</strong> — Freely licensed media repository; attribution per file page.</li>
+                    </ul>
+                </div>
+                <div class="refs-section">
+                    <h3>Identification Method References</h3>
+                    <ul class="refs-list">
+                        <li>Koneman EL, et al. <em>Koneman's Color Atlas and Textbook of Diagnostic Microbiology.</em> 7th ed. Wolters Kluwer; 2017.</li>
+                        <li>Jorgensen JH, et al. <em>Manual of Clinical Microbiology.</em> 12th ed. ASM Press; 2024.</li>
+                        <li>CDC. <em>Laboratory Methods for the Diagnosis of...</em> CDC.gov — organism-specific laboratory methods.</li>
+                        <li>ASM. <em>ASM Curriculum Guidelines and Laboratory Protocols.</em> asm.org.</li>
+                    </ul>
+                </div>
+                <div class="refs-section">
+                    <h3>Disclaimer</h3>
+                    <p class="refs-disclaimer">This tool is for educational orientation only. It is NOT a definitive clinical identification. Always confirm results with standard laboratory methods and clinical correlation. The authors are not responsible for diagnostic decisions made using this tool.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Glossary Modal -->
+    <div id="glossary-modal" class="modal" hidden>
+        <div class="modal-backdrop" id="glossary-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Microbiology Glossary</h2>
+                <button type="button" id="close-glossary-btn" class="ghost-btn">✕ Close</button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="glossary-search" class="glossary-search" placeholder="Search tests...">
+                <div class="glossary-list" id="glossary-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tooltip container -->
+    <div id="tooltip" class="tooltip" hidden></div>
+
+    <script src="app.js"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('service-worker.js')
+          .then((reg) => console.log('Service Worker registered:', reg.scope))
+          .catch((err) => console.log('Service Worker registration failed:', err));
+      }
+    </script>
+</body>
+
+</html>

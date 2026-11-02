@@ -1,0 +1,651 @@
+// Bacterial Identification Web App - Test Results Panel + Dichotomous Tree
+// Educational orientation tool
+
+// Reference database
+const bacteriaDb = [
+  {
+    id: "s_aureus",
+    name: "Staphylococcus aureus",
+    gram: "gp", morph: ["cocci", "clusters"], hemolysis: "beta",
+    catalase: "pos", coagulase: "pos", oxidase: "neg",
+    features: ["Gram-positive cocci in clusters", "Catalase positive", "Coagulase positive", "Beta-hemolytic", "Mannitol positive"],
+    notes: "Common commensal; can cause skin infections, pneumonia, sepsis. Coagulase is key to distinguish from CoNS."
+  },
+  {
+    id: "cons",
+    name: "Coagulase-negative Staphylococcus spp.",
+    gram: "gp", morph: ["cocci", "clusters"], hemolysis: "gamma",
+    catalase: "pos", coagulase: "neg", oxidase: "neg",
+    features: ["Gram-positive cocci in clusters", "Catalase positive", "Coagulase negative"],
+    notes: "Includes S. epidermidis, S. saprophyticus. Often less virulent but can cause device-related infections."
+  },
+  {
+    id: "s_pyogenes",
+    name: "Streptococcus pyogenes (Group A)",
+    gram: "gp", morph: ["cocci", "chains"], hemolysis: "beta",
+    catalase: "neg", pyr: "pos", bacitracin: "s",
+    features: ["Gram-positive cocci in chains", "Catalase negative", "Beta-hemolytic", "PYR positive", "Bacitracin sensitive"],
+    notes: "Pharyngitis, impetigo, scarlet fever. Rapid strep testing common."
+  },
+  {
+    id: "s_pneumoniae",
+    name: "Streptococcus pneumoniae",
+    gram: "gp", morph: ["cocci", "diplococci"], hemolysis: "alpha",
+    catalase: "neg", optochin: "s",
+    features: ["Gram-positive lancet-shaped diplococci", "Alpha-hemolytic", "Optochin sensitive"],
+    notes: "Pneumonia, meningitis, otitis media. Encapsulated."
+  },
+  {
+    id: "enterococcus",
+    name: "Enterococcus spp.",
+    gram: "gp", morph: ["cocci", "pairs", "chains"], hemolysis: "gamma",
+    catalase: "neg", bileesculin: "pos", nacl: "pos",
+    features: ["Gram-positive cocci", "Catalase negative", "Bile-esculin positive", "Growth in 6.5% NaCl"],
+    notes: "E. faecalis/E. faecium. Can be VRE."
+  },
+  {
+    id: "b_anthracis",
+    name: "Bacillus anthracis (HIGH ALERT)",
+    gram: "gp", morph: ["bacilli"], spores: "pos", hemolysis: "gamma", motility: "neg",
+    catalase: "pos",
+    features: ["Large Gram-positive rods", "Spore-forming", "Non-motile", "Non-hemolytic", "Medusa-head colonies"],
+    notes: "SELECT AGENT - Suspect anthrax must be reported immediately and handled with extreme caution."
+  },
+  {
+    id: "b_cereus",
+    name: "Bacillus cereus",
+    gram: "gp", morph: ["bacilli"], spores: "pos", hemolysis: "beta", motility: "pos",
+    catalase: "pos",
+    features: ["Large Gram-positive rods", "Spore-forming", "Motile", "Beta-hemolytic", "Lecithinase positive"],
+    notes: "Food poisoning (emetic/diarrheal)."
+  },
+  {
+    id: "l_monocytogenes",
+    name: "Listeria monocytogenes",
+    gram: "gp", morph: ["bacilli", "coccobacilli"], hemolysis: "beta", motility: "pos",
+    catalase: "pos",
+    features: ["Gram-positive short rods", "Catalase positive", "Tumbling motility at 25°C", "Beta-hemolytic"],
+    notes: "Pregnancy, neonates, immunocompromised. Grows at refrigeration temperatures."
+  },
+  {
+    id: "corynebacterium",
+    name: "Corynebacterium spp.",
+    gram: "gp", morph: ["bacilli"], motility: "neg",
+    catalase: "pos",
+    features: ["Pleomorphic Gram-positive rods", "Catalase positive", "Non-motile", "Palisading arrangement"],
+    notes: "Diphtheroids often commensals; C. diphtheriae needs toxin testing."
+  },
+  {
+    id: "e_rhusiopathiae",
+    name: "Erysipelothrix rhusiopathiae",
+    gram: "gp", morph: ["bacilli"], catalase: "neg", h2s: "pos",
+    features: ["Slender Gram-positive rods", "Catalase negative", "H₂S positive"],
+    notes: "Zoonotic - erysipeloid."
+  },
+  {
+    id: "neisseria",
+    name: "Neisseria spp.",
+    gram: "gn", morph: ["cocci", "diplococci"], oxidase: "pos", catalase: "pos",
+    features: ["Gram-negative diplococci", "Oxidase positive", "Catalase positive", "Fastidious"],
+    notes: "N. gonorrhoeae/N. meningitidis require confirmation and notification."
+  },
+  {
+    id: "e_coli",
+    name: "Escherichia coli",
+    gram: "gn", morph: ["bacilli"], mac: "lf", indole: "pos", motility: "pos",
+    oxidase: "neg", mr: "pos", vp: "neg", citrate: "neg",
+    features: ["Gram-negative rods", "Lactose fermenter", "Indole positive", "Motile", "IMViC: + + - -"],
+    notes: "Gut flora; pathotypes need further testing."
+  },
+  {
+    id: "k_pneumoniae",
+    name: "Klebsiella pneumoniae",
+    gram: "gn", morph: ["bacilli"], mac: "lf", indole: "neg", motility: "neg",
+    oxidase: "neg", mr: "neg", vp: "pos", citrate: "pos",
+    features: ["Gram-negative rods", "Mucoid lactose fermenter", "Non-motile", "IMViC: - - + +"],
+    notes: "Encapsulated; often MDR/CPE screening needed."
+  },
+  {
+    id: "enterobacter",
+    name: "Enterobacter spp.",
+    gram: "gn", morph: ["bacilli"], mac: "lf", indole: "neg", motility: "pos",
+    oxidase: "neg", mr: "neg", vp: "pos", citrate: "pos",
+    features: ["Gram-negative rods", "Lactose fermenter", "Motile", "IMViC: - - + +"],
+    notes: "Opportunistic pathogen."
+  },
+  {
+    id: "p_aeruginosa",
+    name: "Pseudomonas aeruginosa",
+    gram: "gn", morph: ["bacilli"], mac: "nlf", oxidase: "pos", catalase: "pos", motility: "pos",
+    features: ["Gram-negative rods", "Non-lactose fermenter", "Oxidase positive", "Blue-green pigment", "Grape-like odor"],
+    notes: "Opportunistic, often multidrug resistant."
+  },
+  {
+    id: "salmonella",
+    name: "Salmonella spp.",
+    gram: "gn", morph: ["bacilli"], mac: "nlf", oxidase: "neg", h2s: "pos", motility: "pos", urease: "neg",
+    features: ["Gram-negative rods", "Non-lactose fermenter", "H₂S positive", "Motile", "Urease negative"],
+    notes: "Gastroenteritis/typhoid; serotyping required."
+  },
+  {
+    id: "shigella",
+    name: "Shigella spp.",
+    gram: "gn", morph: ["bacilli"], mac: "nlf", oxidase: "neg", h2s: "neg", motility: "neg", urease: "neg",
+    features: ["Gram-negative rods", "Non-lactose fermenter", "H₂S negative", "Non-motile"],
+    notes: "Highly infectious dysentery; serogrouping needed."
+  },
+  {
+    id: "proteus",
+    name: "Proteus spp.",
+    gram: "gn", morph: ["bacilli"], mac: "nlf", oxidase: "neg", h2s: "pos", motility: "swarming", urease: "pos", pda: "pos",
+    features: ["Gram-negative rods", "Non-lactose fermenter", "Swarming motility", "H₂S positive", "Urease positive", "PDA positive"],
+    notes: "P. mirabilis/vulgaris. Urease can contribute to struvite stones."
+  }
+];
+
+// Next test suggestions
+const nextTestSuggestions = {
+  "s_aureus_vs_cons": [
+    { test: "Coagulase", reason: "Definitively separates S. aureus (+) from CoNS (-)" }
+  ],
+  "strep_group": [
+    { test: "PYR", reason: "S. pyogenes is PYR positive" },
+    { test: "Bacitracin sensitivity", reason: "S. pyogenes is usually bacitracin sensitive" },
+    { test: "Optochin sensitivity", reason: "S. pneumoniae is optochin sensitive" },
+    { test: "Bile-esculin + 6.5% NaCl", reason: "Helps identify Enterococcus spp." }
+  ],
+  "enterics_lf": [
+    { test: "Indole", reason: "E. coli is indole positive" },
+    { test: "Motility", reason: "Klebsiella is usually non-motile" },
+    { test: "IMViC (MR/VP/Citrate)", reason: "Distinguishes E. coli, Klebsiella, Enterobacter" }
+  ],
+  "enterics_nlf": [
+    { test: "Oxidase", reason: "Pseudomonas is oxidase positive; enteric NLF are oxidase negative" },
+    { test: "H₂S", reason: "Salmonella/Proteus produce H₂S; Shigella does not" },
+    { test: "Motility", reason: "Shigella is non-motile; Salmonella/Proteus are motile" },
+    { test: "Urease/PDA", reason: "Proteus is urease and PDA positive" }
+  ],
+  "gp_rods": [
+    { test: "Spore stain", reason: "Distinguishes Bacillus/Clostridium from other GP rods" },
+    { test: "Motility at 25°C", reason: "Listeria shows tumbling motility" },
+    { test: "Catalase", reason: "Helps differentiate Listeria/Corynebacterium from Erysipelothrix" }
+  ]
+};
+
+function getTestValues() {
+  return {
+    gram: document.getElementById("gram").value,
+    morph: document.getElementById("morph").value,
+    hemolysis: document.getElementById("hemolysis").value,
+    spores: document.getElementById("spores").value,
+    catalase: document.getElementById("catalase").value,
+    oxidase: document.getElementById("oxidase").value,
+    coagulase: document.getElementById("coagulase").value,
+    urease: document.getElementById("urease").value,
+    pyr: document.getElementById("pyr").value,
+    optochin: document.getElementById("optochin").value,
+    bacitracin: document.getElementById("bacitracin").value,
+    mac: document.getElementById("mac").value,
+    indole: document.getElementById("indole").value,
+    mr: document.getElementById("mr").value,
+    vp: document.getElementById("vp").value,
+    citrate: document.getElementById("citrate").value,
+    h2s: document.getElementById("h2s").value,
+    motility: document.getElementById("motility").value,
+    bileesculin: document.getElementById("bileesculin").value,
+    nacl: document.getElementById("nacl").value,
+    pda: document.getElementById("pda").value
+  };
+}
+
+function scoreMatch(bacteria, tests) {
+  let score = 0;
+  let total = 0;
+  let conflicts = 0;
+
+  const check = (field, expected) => {
+    if (!tests[field]) return;
+    total += 1;
+    if (Array.isArray(expected)) {
+      if (expected.includes(tests[field])) score += 1;
+      else conflicts += 1;
+    } else if (tests[field] === expected) {
+      score += 1;
+    } else {
+      conflicts += 1;
+    }
+  };
+
+  check("gram", bacteria.gram);
+  if (tests.morph && bacteria.morph) {
+    total += 1;
+    if (bacteria.morph.includes(tests.morph)) score += 1;
+    else conflicts += 1;
+  }
+  check("hemolysis", bacteria.hemolysis);
+  check("spores", bacteria.spores);
+  check("catalase", bacteria.catalase);
+  check("oxidase", bacteria.oxidase);
+  check("coagulase", bacteria.coagulase);
+  check("urease", bacteria.urease);
+  check("pyr", bacteria.pyr);
+  check("optochin", bacteria.optochin);
+  check("bacitracin", bacteria.bacitracin);
+  check("mac", bacteria.mac);
+  check("indole", bacteria.indole);
+  check("mr", bacteria.mr);
+  check("vp", bacteria.vp);
+  check("citrate", bacteria.citrate);
+  check("h2s", bacteria.h2s);
+  check("motility", bacteria.motility);
+  check("bileesculin", bacteria.bileesculin);
+  check("nacl", bacteria.nacl);
+  check("pda", bacteria.pda);
+
+  if (total === 0) return { score: 0, percent: 0, conflicts };
+  const percent = Math.round((score / total) * 100);
+  return { score, total, percent, conflicts };
+}
+
+function identifyBacteria() {
+  const tests = getTestValues();
+  const results = bacteriaDb
+    .map((b) => {
+      const s = scoreMatch(b, tests);
+      return { ...b, ...s };
+    })
+    .filter((r) => r.total > 0)
+    .sort((a, b) => {
+      if (b.percent !== a.percent) return b.percent - a.percent;
+      return b.score - a.score;
+    });
+
+  const matchesList = document.getElementById("matches-list");
+  const matchResults = document.getElementById("match-results");
+  const nextTestsSection = document.getElementById("next-tests-section");
+  const nextTestsList = document.getElementById("next-tests-list");
+
+  matchesList.innerHTML = "";
+  nextTestsList.innerHTML = "";
+
+  if (results.length === 0) {
+    const div = document.createElement("div");
+    div.className = "match-item";
+    div.innerHTML = `<div class="match-info"><div class="match-name">No matches found</div><div class="match-features">Enter at least one test result to get suggestions.</div></div>`;
+    matchesList.appendChild(div);
+    matchResults.hidden = false;
+    nextTestsSection.hidden = true;
+    matchResults.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    return;
+  }
+
+  results.slice(0, 6).forEach((r, idx) => {
+    const div = document.createElement("div");
+    div.className = "match-item" + (idx === 0 ? " top-match" : "");
+    div.innerHTML = `
+      <div class="match-info">
+        <div class="match-header-row">
+          <div class="match-name">${r.name}</div>
+          <div class="match-score">${r.percent}% match</div>
+        </div>
+        <div class="match-features">${r.features.slice(0, 4).join(" • ")}</div>
+        <div class="match-notes">${r.notes}</div>
+      </div>
+    `;
+    matchesList.appendChild(div);
+  });
+
+  // Suggest next tests
+  const suggestions = new Set();
+  const top = results[0];
+  if (top.gram === "gp" && top.name.includes("Staphylococcus")) {
+    nextTestSuggestions.s_aureus_vs_cons.forEach((s) => suggestions.add(s.test + " - " + s.reason));
+  }
+  if (top.gram === "gp" && (top.name.includes("Streptococcus") || top.name.includes("Enterococcus"))) {
+    nextTestSuggestions.strep_group.forEach((s) => suggestions.add(s.test + " - " + s.reason));
+  }
+  if (top.gram === "gn" && top.mac === "lf") {
+    nextTestSuggestions.enterics_lf.forEach((s) => suggestions.add(s.test + " - " + s.reason));
+  }
+  if (top.gram === "gn" && top.mac === "nlf") {
+    nextTestSuggestions.enterics_nlf.forEach((s) => suggestions.add(s.test + " - " + s.reason));
+  }
+  if (top.gram === "gp" && top.name.includes("Bacillus") || top.name.includes("Listeria") || top.name.includes("Corynebacterium") || top.name.includes("Erysipelothrix")) {
+    nextTestSuggestions.gp_rods.forEach((s) => suggestions.add(s.test + " - " + s.reason));
+  }
+
+  if (suggestions.size > 0) {
+    suggestions.forEach((s) => {
+      const li = document.createElement("li");
+      li.textContent = s;
+      nextTestsList.appendChild(li);
+    });
+    nextTestsSection.hidden = false;
+  } else {
+    nextTestsSection.hidden = true;
+  }
+
+  matchResults.hidden = false;
+  matchResults.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+document.getElementById("identify-btn").addEventListener("click", identifyBacteria);
+
+document.getElementById("clear-tests-btn").addEventListener("click", () => {
+  const selects = document.querySelectorAll("#results-card select");
+  selects.forEach((s) => {
+    s.value = "";
+  });
+  document.getElementById("match-results").hidden = true;
+});
+
+// Mode switching
+const modeBtns = document.querySelectorAll(".mode-btn");
+modeBtns.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    modeBtns.forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    const mode = btn.dataset.mode;
+    if (mode === "results") {
+      document.getElementById("results-card").hidden = false;
+      document.getElementById("tree-card").hidden = true;
+    } else {
+      document.getElementById("results-card").hidden = true;
+      document.getElementById("tree-card").hidden = false;
+    }
+  });
+});
+
+// Tree logic (keep existing)
+const treeData = [
+  {
+    id: "start",
+    question: "What is the Gram stain result and morphology?",
+    helper: "Begin with microscopy: observe Gram reaction and cell shape.",
+    options: [
+      { value: "gp-cocci", title: "Gram-positive cocci", description: "Purple spherical cells in clusters/chains/pairs" },
+      { value: "gp-bacilli", title: "Gram-positive bacilli (rods)", description: "Purple rod-shaped cells" },
+      { value: "gn-cocci", title: "Gram-negative cocci", description: "Pink/red spherical cells" },
+      { value: "gn-bacilli", title: "Gram-negative bacilli (rods)", description: "Pink/red rod-shaped cells" }
+    ],
+    next: (choice) => {
+      if (choice === "gp-cocci") return "gp-cocci-catalase";
+      if (choice === "gp-bacilli") return "gp-bacilli-spore";
+      if (choice === "gn-cocci") return "gn-cocci-oxidase";
+      if (choice === "gn-bacilli") return "gn-bacilli-lactose";
+      return null;
+    }
+  },
+  {
+    id: "gp-cocci-catalase",
+    question: "Catalase test result?",
+    helper: "Add H₂O₂ to colony: bubbles = positive; no bubbles = negative.",
+    options: [
+      { value: "pos", title: "Catalase positive", description: "Effervescence observed" },
+      { value: "neg", title: "Catalase negative", description: "No bubbles observed" }
+    ],
+    next: (c) => (c === "pos" ? "gp-cocci-staph" : "gp-cocci-strep")
+  },
+  {
+    id: "gp-cocci-staph",
+    question: "Coagulase test result?",
+    helper: "Coagulase differentiates Staphylococcus aureus from CoNS.",
+    options: [
+      { value: "pos", title: "Coagulase positive", description: "Clot formation" },
+      { value: "neg", title: "Coagulase negative", description: "No clot (Coagulase-negative Staphylococci)" }
+    ],
+    next: (c) => (c === "pos" ? "res-s-aureus" : "res-cons")
+  },
+  {
+    id: "gp-cocci-strep",
+    question: "Hemolysis pattern on blood agar?",
+    helper: "Observe alpha (partial), beta (complete), or gamma (none) hemolysis.",
+    options: [
+      { value: "beta", title: "Beta-hemolytic", description: "Clear zone around colonies" },
+      { value: "alpha", title: "Alpha-hemolytic", description: "Greenish zone around colonies" },
+      { value: "gamma", title: "Gamma-hemolytic (non-hemolytic)", description: "No change around colonies" }
+    ],
+    next: (c) => {
+      if (c === "beta") return "res-strep-pyogenes";
+      if (c === "alpha") return "res-strep-pneumoniae";
+      return "res-enterococcus";
+    }
+  },
+  {
+    id: "gp-bacilli-spore",
+    question: "Spore formation (endospores)?",
+    helper: "Perform spore stain or observe under phase contrast.",
+    options: [
+      { value: "pos", title: "Spore-forming", description: "Endospores present" },
+      { value: "neg", title: "Non-spore-forming", description: "No endospores observed" }
+    ],
+    next: (c) => (c === "pos" ? "gp-bacilli-bacillus" : "gp-bacilli-nonspore")
+  },
+  {
+    id: "gp-bacilli-bacillus",
+    question: "Motility and hemolysis?",
+    helper: "Bacillus anthracis is non-motile, non-hemolytic; B. cereus is motile and beta-hemolytic.",
+    options: [
+      { value: "anthracis", title: "Non-motile, non-hemolytic", description: "Suggestive of Bacillus anthracis" },
+      { value: "cereus", title: "Motile, beta-hemolytic", description: "Suggestive of Bacillus cereus" }
+    ],
+    next: (c) => (c === "anthracis" ? "res-b-anthracis" : "res-b-cereus")
+  },
+  {
+    id: "gp-bacilli-nonspore",
+    question: "Catalase result?",
+    helper: "Listeria monocytogenes is catalase positive; Corynebacterium spp. are usually catalase positive; Erysipelothrix is catalase negative.",
+    options: [
+      { value: "pos", title: "Catalase positive", description: "Bubbles with H₂O₂" },
+      { value: "neg", title: "Catalase negative", description: "No bubbles" }
+    ],
+    next: (c) => (c === "pos" ? "gp-bacilli-catpos" : "res-erysipelothrix")
+  },
+  {
+    id: "gp-bacilli-catpos",
+    question: "Motility at 25°C?",
+    helper: "Listeria shows tumbling motility; Corynebacterium spp. are non-motile.",
+    options: [
+      { value: "pos", title: "Motile (tumbling)", description: "Characteristic of Listeria monocytogenes" },
+      { value: "neg", title: "Non-motile", description: "Suggestive of Corynebacterium spp." }
+    ],
+    next: (c) => (c === "pos" ? "res-l-monocytogenes" : "res-corynebacterium")
+  },
+  {
+    id: "gn-cocci-oxidase",
+    question: "Oxidase test result?",
+    helper: "Neisseria spp. are oxidase positive.",
+    options: [
+      { value: "pos", title: "Oxidase positive", description: "Purple color develops" },
+      { value: "neg", title: "Oxidase negative", description: "No color change" }
+    ],
+    next: (c) => (c === "pos" ? "res-neisseria" : "res-veillonella")
+  },
+  {
+    id: "gn-bacilli-lactose",
+    question: "Lactose fermentation on MacConkey agar?",
+    helper: "Pink colonies = lactose fermenters; colorless = non-lactose fermenters.",
+    options: [
+      { value: "lf", title: "Lactose fermenter (LF)", description: "Pink/red colonies on MacConkey" },
+      { value: "nlf", title: "Non-lactose fermenter (NLF)", description: "Colorless colonies on MacConkey" }
+    ],
+    next: (c) => (c === "lf" ? "gn-bacilli-lf" : "gn-bacilli-nlf")
+  },
+  {
+    id: "gn-bacilli-lf",
+    question: "Indole and motility?",
+    helper: "E. coli: Indole+, motile; Klebsiella: Indole-, non-motile; Enterobacter: Indole-, motile.",
+    options: [
+      { value: "ecoli", title: "Indole positive, motile", description: "Suggestive of Escherichia coli" },
+      { value: "kleb", title: "Indole negative, non-motile", description: "Suggestive of Klebsiella pneumoniae" },
+      { value: "entero", title: "Indole negative, motile", description: "Suggestive of Enterobacter spp." }
+    ],
+    next: (c) => {
+      if (c === "ecoli") return "res-e-coli";
+      if (c === "kleb") return "res-k-pneumoniae";
+      return "res-enterobacter";
+    }
+  },
+  {
+    id: "gn-bacilli-nlf",
+    question: "Oxidase test result?",
+    helper: "Pseudomonas spp. are oxidase positive.",
+    options: [
+      { value: "pos", title: "Oxidase positive", description: "Suggestive of Pseudomonas aeruginosa" },
+      { value: "neg", title: "Oxidase negative", description: "Suggestive of Enterobacteriaceae (NLF)" }
+    ],
+    next: (c) => (c === "pos" ? "res-p-aeruginosa" : "gn-bacilli-nlf-entero")
+  },
+  {
+    id: "gn-bacilli-nlf-entero",
+    question: "H₂S production and motility?",
+    helper: "Salmonella: H₂S+, motile; Shigella: H₂S-, non-motile; Proteus: H₂S+, swarming.",
+    options: [
+      { value: "salmonella", title: "H₂S positive, motile", description: "Suggestive of Salmonella spp." },
+      { value: "shigella", title: "H₂S negative, non-motile", description: "Suggestive of Shigella spp." },
+      { value: "proteus", title: "H₂S positive, swarming motility", description: "Suggestive of Proteus spp." }
+    ],
+    next: (c) => {
+      if (c === "salmonella") return "res-salmonella";
+      if (c === "shigella") return "res-shigella";
+      return "res-proteus";
+    }
+  },
+  // Results (abbreviated for brevity - key ones)
+  { id: "res-s-aureus", result: { name: "Staphylococcus aureus (probable)", description: "GP cocci clusters, catalase+, coagulase+", features: ["GP cocci in clusters", "Catalase +", "Coagulase +"], notes: "Key: coagulase positive." } },
+  { id: "res-cons", result: { name: "Coagulase-negative Staphylococcus spp. (probable)", description: "GP cocci clusters, catalase+, coagulase-", features: ["GP cocci in clusters", "Catalase +", "Coagulase -"], notes: "Includes S. epidermidis, S. saprophyticus." } },
+  { id: "res-strep-pyogenes", result: { name: "Streptococcus pyogenes (GAS, probable)", description: "GP cocci chains, catalase-, beta-hemolytic", features: ["GP cocci in chains", "Catalase -", "Beta-hemolytic"], notes: "PYR+ / bacitracin sensitive." } },
+  { id: "res-strep-pneumoniae", result: { name: "Streptococcus pneumoniae (probable)", description: "GP diplococci, alpha-hemolytic", features: ["GP diplococci", "Alpha-hemolytic", "Optochin sensitive"], notes: "Lancet-shaped." } },
+  { id: "res-enterococcus", result: { name: "Enterococcus spp. (probable)", description: "GP cocci, catalase-, gamma-hemolytic", features: ["GP cocci", "Catalase -", "Bile-esculin +", "6.5% NaCl +"], notes: "VRE possible." } },
+  { id: "res-b-anthracis", result: { name: "Bacillus anthracis (HIGH ALERT)", description: "Large GP rods, spore+, non-motile, non-hemolytic", features: ["Large GP rods", "Spore +", "Non-motile"], notes: "SELECT AGENT - report immediately." } },
+  { id: "res-b-cereus", result: { name: "Bacillus cereus (probable)", description: "Large GP rods, spore+, motile, beta-hemolytic", features: ["Large GP rods", "Spore +", "Motile", "Beta-hemolytic"], notes: "Food poisoning." } },
+  { id: "res-l-monocytogenes", result: { name: "Listeria monocytogenes (probable)", description: "GP short rods, catalase+, tumbling motility", features: ["GP short rods", "Catalase +", "Tumbling motility"], notes: "Grows at 4°C." } },
+  { id: "res-corynebacterium", result: { name: "Corynebacterium spp. (probable)", description: "Pleomorphic GP rods, catalase+, non-motile", features: ["Pleomorphic GP rods", "Catalase +", "Non-motile"], notes: "Diphtheroids common." } },
+  { id: "res-erysipelothrix", result: { name: "Erysipelothrix rhusiopathiae (probable)", description: "Slender GP rods, catalase-, H₂S+", features: ["Slender GP rods", "Catalase -", "H₂S +"], notes: "Zoonotic." } },
+  { id: "res-neisseria", result: { name: "Neisseria spp. (probable)", description: "GN diplococci, oxidase+", features: ["GN diplococci", "Oxidase +"], notes: "Fastidious." } },
+  { id: "res-veillonella", result: { name: "Veillonella spp. (probable)", description: "GN cocci, oxidase-", features: ["GN cocci", "Oxidase -"], notes: "Anaerobic." } },
+  { id: "res-e-coli", result: { name: "Escherichia coli (probable)", description: "GN rods, LF, Indole+, motile", features: ["GN rods", "LF", "Indole +", "Motile"], notes: "IMViC + + - - ." } },
+  { id: "res-k-pneumoniae", result: { name: "Klebsiella pneumoniae (probable)", description: "GN rods, mucoid LF, non-motile", features: ["GN rods", "Mucoid LF", "Non-motile"], notes: "IMViC - - + + ." } },
+  { id: "res-enterobacter", result: { name: "Enterobacter spp. (probable)", description: "GN rods, LF, motile", features: ["GN rods", "LF", "Motile"], notes: "IMViC - - + + ." } },
+  { id: "res-p-aeruginosa", result: { name: "Pseudomonas aeruginosa (probable)", description: "GN rods, NLF, oxidase+", features: ["GN rods", "NLF", "Oxidase +", "Pigment"], notes: "Grape-like odor." } },
+  { id: "res-salmonella", result: { name: "Salmonella spp. (probable)", description: "GN rods, NLF, H₂S+, motile", features: ["GN rods", "NLF", "H₂S +", "Motile"], notes: "Serotyping needed." } },
+  { id: "res-shigella", result: { name: "Shigella spp. (probable)", description: "GN rods, NLF, H₂S-, non-motile", features: ["GN rods", "NLF", "H₂S -", "Non-motile"], notes: "Highly infectious." } },
+  { id: "res-proteus", result: { name: "Proteus spp. (probable)", description: "GN rods, NLF, H₂S+, swarming", features: ["GN rods", "NLF", "Swarming", "H₂S +", "Urease +"], notes: "PDA +." } }
+];
+
+const questionText = document.getElementById("question-text");
+const optionsContainer = document.getElementById("options");
+const helperText = document.getElementById("helper-text");
+const pathList = document.getElementById("path-list");
+const progressFill = document.getElementById("progress-fill");
+const questionArea = document.getElementById("question-area");
+const resultArea = document.getElementById("result-area");
+const resultName = document.getElementById("result-name");
+const resultDescription = document.getElementById("result-description");
+const resultFeatures = document.getElementById("result-features");
+const resultNotes = document.getElementById("result-notes");
+const backBtn = document.getElementById("back-btn");
+const resetBtn = document.getElementById("reset-btn");
+const restartBtn = document.getElementById("restart-btn");
+
+let history = [];
+
+function getNodeById(id) {
+  return treeData.find((n) => n.id === id) || null;
+}
+
+function renderPath() {
+  pathList.innerHTML = "";
+  history.forEach((item, idx) => {
+    const chip = document.createElement("div");
+    chip.className = "path-chip";
+    chip.innerHTML = `<span class="step">Step ${idx + 1}</span> · <span class="label">${item.questionLabel || ""}</span> → <span class="answer">${item.choiceLabel}</span>`;
+    pathList.appendChild(chip);
+  });
+  backBtn.disabled = history.length === 0;
+  updateProgress();
+}
+
+function updateProgress() {
+  const pct = Math.min(100, (history.length / 6) * 100);
+  progressFill.style.width = pct + "%";
+}
+
+function startTree() {
+  history = [];
+  showQuestion("start");
+  renderPath();
+  resultArea.hidden = true;
+  questionArea.hidden = false;
+}
+
+function showQuestion(nodeId) {
+  const node = getNodeById(nodeId);
+  if (!node) return;
+  questionText.textContent = node.question;
+  helperText.textContent = node.helper || "";
+  optionsContainer.innerHTML = "";
+  node.options.forEach((opt) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "option-btn";
+    btn.innerHTML = `<span class="option-title">${opt.title}</span><span class="option-desc">${opt.description}</span>`;
+    btn.addEventListener("click", () => {
+      history.push({ nodeId: node.id, questionLabel: node.question, choiceLabel: opt.title, choiceValue: opt.value });
+      renderPath();
+      const nextId = typeof node.next === "function" ? node.next(opt.value) : node.next;
+      const nextNode = getNodeById(nextId);
+      if (nextNode && nextNode.result) {
+        showResult(nextId);
+      } else if (nextId) {
+        showQuestion(nextId);
+      } else {
+        showResult(nextId);
+      }
+    });
+    optionsContainer.appendChild(btn);
+  });
+}
+
+function showResult(nodeId) {
+  const node = getNodeById(nodeId);
+  questionArea.hidden = true;
+  resultArea.hidden = false;
+  if (!node || !node.result) {
+    resultName.textContent = "Identification Incomplete";
+    resultDescription.textContent = "Could not determine a specific result from the current path.";
+    resultFeatures.innerHTML = "";
+    resultNotes.textContent = "Use 'Back' or 'Reset' to revise.";
+    return;
+  }
+  const res = node.result;
+  resultName.textContent = res.name;
+  resultDescription.textContent = res.description;
+  resultFeatures.innerHTML = "";
+  (res.features || []).forEach((f) => {
+    const li = document.createElement("li");
+    li.textContent = f;
+    resultFeatures.appendChild(li);
+  });
+  resultNotes.textContent = res.notes || "";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+backBtn.addEventListener("click", () => {
+  if (history.length === 0) return;
+  history.pop();
+  renderPath();
+  resultArea.hidden = true;
+  questionArea.hidden = false;
+  if (history.length === 0) {
+    startTree();
+    return;
+  }
+  const last = history[history.length - 1];
+  showQuestion(last.nodeId);
+});
+
+resetBtn.addEventListener("click", startTree);
+restartBtn.addEventListener("click", startTree);
+
+startTree();

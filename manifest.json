@@ -1,0 +1,75 @@
+{
+  "id": "reshape-biotech-bacterial-identification",
+  "name": "Reshape Biotech — Bacterial Identification",
+  "short_name": "Reshape Biotech",
+  "description": "Identify bacteria from test results with an interactive dichotomous key, smart scoring, image gallery, and offline PWA support. Educational orientation tool for microbiology labs.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f1026",
+  "theme_color": "#0f1026",
+  "scope": "/",
+  "lang": "en",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshots/screenshot-1.png",
+      "sizes": "1024x768",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Reshape Biotech — Test Results Panel"
+    },
+    {
+      "src": "screenshots/screenshot-2.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Reshape Biotech — Image Gallery"
+    },
+    {
+      "src": "screenshots/screenshot-3.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Reshape Biotech — Dichotomous Tree"
+    }
+  ],
+  "categories": ["medical", "education", "science"],
+  "shortcuts": [
+    {
+      "name": "Test Results Panel",
+      "short_name": "Test Results",
+      "description": "Enter test results and identify bacteria",
+      "url": "/?mode=results",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Image Gallery",
+      "short_name": "Gallery",
+      "description": "Browse reference microscopic photos",
+      "url": "/?mode=gallery",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Dichotomous Tree",
+      "short_name": "Tree",
+      "description": "Step-by-step dichotomous key",
+      "url": "/?mode=tree",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

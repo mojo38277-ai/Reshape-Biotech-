@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bacterial Identification Web App</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <header class="app-header">
+        <div class="header-content">
+            <h1>Bacterial Identification Web App</h1>
+            <p class="subtitle">Identify bacteria from your test results or use the guided dichotomous tree</p>
+        </div>
+    </header>
+
+    <nav class="mode-nav">
+        <button type="button" class="mode-btn active" data-mode="results">Test Results Panel</button>
+        <button type="button" class="mode-btn" data-mode="tree">Dichotomous Tree</button>
+    </nav>
+
+    <main class="app-container">
+        <section class="card" id="results-card">
+            <div class="card-header">
+                <h2>Enter Your Test Results</h2>
+                <div class="header-actions">
+                    <button type="button" id="clear-tests-btn" class="ghost-btn">Clear All</button>
+                    <button type="button" id="identify-btn" class="primary-btn">Identify Bacteria</button>
+                </div>
+            </div>
+            <p class="card-subtitle">Select what you observed. Leave blank if unknown/not tested.</p>
+
+            <div class="test-sections">
+                <section class="test-section">
+                    <h3>Microscopy &amp; Growth</h3>
+                    <div class="test-grid">
+                        <div class="test-item">
+                            <label for="gram">Gram Stain</label>
+                            <select id="gram">
+                                <option value="">Not tested</option>
+                                <option value="gp">Gram-positive</option>
+                                <option value="gn">Gram-negative</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="morph">Morphology</label>
+                            <select id="morph">
+                                <option value="">Not tested</option>
+                                <option value="cocci">Cocci (spherical)</option>
+                                <option value="bacilli">Bacilli/Rods</option>
+                                <option value="coccobacilli">Coccobacilli</option>
+                                <option value="diplococci">Diplococci</option>
+                                <option value="clusters">In clusters</option>
+                                <option value="chains">In chains</option>
+                                <option value="pairs">In pairs</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="hemolysis">Hemolysis (Blood Agar)</label>
+                            <select id="hemolysis">
+                                <option value="">Not tested</option>
+                                <option value="beta">Beta (complete)</option>
+                                <option value="alpha">Alpha (partial)</option>
+                                <option value="gamma">Gamma (none)</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="spores">Endospores</label>
+                            <select id="spores">
+                                <option value="">Not tested</option>
+                                <option value="pos">Present (+)</option>
+                                <option value="neg">Absent (-)</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="test-section">
+                    <h3>Enzymatic &amp; Rapid Tests</h3>
+                    <div class="test-grid">
+                        <div class="test-item">
+                            <label for="catalase">Catalase</label>
+                            <select id="catalase">
+                                <option value="">Not tested</option>
+                                <option value="pos">Positive (+)</option>
+                                <option value="neg">Negative (-)</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="oxidase">Oxidase</label>
+                            <select id="oxidase">
+                                <option value="">Not tested</option>
+                                <option value="pos">Positive (+)</option>
+                                <option value="neg">Negative (-)</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="coagulase">Coagulase</label>
+                            <select id="coagulase">
+                                <option value="">Not tested</option>
+                                <option value="pos">Positive (+)</option>
+                                <option value="neg">Negative (-)</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="urease">Urease</label>
+                            <select id="urease">
+                                <option value="">Not tested</option>
+                                <option value="pos">Positive (+)</option>
+                                <option value="neg">Negative (-)</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="pyr">PYR</label>
+                            <select id="pyr">
+                                <option value="">Not tested</option>
+                                <option value="pos">Positive (+)</option>
+                                <option value="neg">Negative (-)</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="optochin">Optochin Sensitivity</label>
+                            <select id="optochin">
+                                <option value="">Not tested</option>
+                                <option value="s">Sensitive</option>
+                                <option value="r">Resistant</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="bacitracin">Bacitracin Sensitivity</label>
+                            <select id="bacitracin">
+                                <option value="">Not tested</option>
+                                <option value="s">Sensitive</option>
+                                <option value="r">Resistant</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="test-section">
+                    <h3>Biochemical &amp; Media</h3>
+                    <div class="test-grid">
+                        <div class="test-item">
+                            <label for="mac">MacConkey Agar</label>
+                            <select id="mac">
+                                <option value="">Not tested</option>
+                                <option value="lf">Lactose fermenter (pink)</option>
+                                <option value="nlf">Non-lactose fermenter (colorless)</option>
+                                <option value="ng">No growth</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="indole">Indole</label>
+                            <select id="indole">
+                                <option value="">Not tested</option>
+                                <option value="pos">Positive (+)</option>
+                                <option value="neg">Negative (-)</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="mr">Methyl Red (MR)</label>
+                            <select id="mr">
+                                <option value="">Not tested</option>
+                                <option value="pos">Positive (+)</option>
+                                <option value="neg">Negative (-)</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="vp">Voges-Proskauer (VP)</label>
+                            <select id="vp">
+                                <option value="">Not tested</option>
+                                <option value="pos">Positive (+)</option>
+                                <option value="neg">Negative (-)</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="citrate">Citrate</label>
+                            <select id="citrate">
+                                <option value="">Not tested</option>
+                                <option value="pos">Positive (+)</option>
+                                <option value="neg">Negative (-)</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="h2s">H₂S Production</label>
+                            <select id="h2s">
+                                <option value="">Not tested</option>
+                                <option value="pos">Positive (+)</option>
+                                <option value="neg">Negative (-)</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="motility">Motility</label>
+                            <select id="motility">
+                                <option value="">Not tested</option>
+                                <option value="pos">Positive (+)</option>
+                                <option value="neg">Negative (-)</option>
+                                <option value="swarming">Swarming</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="bileesculin">Bile Esculin</label>
+                            <select id="bileesculin">
+                                <option value="">Not tested</option>
+                                <option value="pos">Positive (+)</option>
+                                <option value="neg">Negative (-)</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="nacl">Growth in 6.5% NaCl</label>
+                            <select id="nacl">
+                                <option value="">Not tested</option>
+                                <option value="pos">Positive (+)</option>
+                                <option value="neg">Negative (-)</option>
+                            </select>
+                        </div>
+                        <div class="test-item">
+                            <label for="pda">Phenylalanine Deaminase (PDA)</label>
+                            <select id="pda">
+                                <option value="">Not tested</option>
+                                <option value="pos">Positive (+)</option>
+                                <option value="neg">Negative (-)</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="results-panel" id="match-results" hidden>
+                <div class="match-header">
+                    <h3>Ranked Matches</h3>
+                    <p class="match-subtitle">Based on your entered test results. Higher score = better match.</p>
+                </div>
+                <div class="matches-list" id="matches-list"></div>
+                <div class="next-tests" id="next-tests-section" hidden>
+                    <h4>Suggested Next Tests to Discriminate</h4>
+                    <p class="next-tests-subtitle">These tests will help separate the top matches.</p>
+                    <ul id="next-tests-list"></ul>
+                </div>
+                <div class="disclaimer">
+                    <strong>Disclaimer:</strong> This is an educational orientation tool, not a definitive clinical
+                    identification. Always confirm with standard laboratory methods (culture, biochemical panels, MALDI-TOF
+                    or molecular testing).
+                </div>
+            </div>
+        </section>
+
+        <section class="card" id="tree-card" hidden>
+            <div class="card-header">
+                <h2>Dichotomous Tree</h2>
+                <div class="header-actions">
+                    <button type="button" id="reset-btn" class="ghost-btn">Reset</button>
+                    <button type="button" id="back-btn" class="ghost-btn" disabled>Back</button>
+                </div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <div class="path-list" id="path-list" aria-live="polite" aria-label="Selected tests and answers"></div>
+            <div class="question-area" id="question-area" aria-live="polite">
+                <h3 id="question-text"></h3>
+                <div class="options" id="options"></div>
+                <p class="helper-text" id="helper-text"></p>
+            </div>
+            <div class="result-area" id="result-area" hidden>
+                <div class="result-header">
+                    <span class="result-badge">Probable Identification</span>
+                    <h3 id="result-name"></h3>
+                </div>
+                <p class="result-description" id="result-description"></p>
+                <div class="result-details">
+                    <h4>Key Features</h4>
+                    <ul id="result-features"></ul>
+                </div>
+                <div class="result-notes">
+                    <h4>Important Notes</h4>
+                    <p id="result-notes"></p>
+                </div>
+                <div class="disclaimer">
+                    <strong>Disclaimer:</strong> This is an educational orientation key, not a definitive clinical
+                    identification. Always confirm with standard laboratory methods (culture, biochemical panels, MALDI-TOF
+                    or molecular testing).
+                </div>
+                <button type="button" id="restart-btn" class="primary-btn">Start New Identification</button>
+            </div>
+        </section>
+
+        <aside class="side-panel">
+            <section class="card">
+                <div class="card-header">
+                    <h2>How to Use</h2>
+                </div>
+                <ul class="guide-list">
+                    <li><strong>Test Panel:</strong> Enter results you already have (Gram, catalase, oxidase, etc.). Click "Identify Bacteria" to get ranked matches.</li>
+                    <li><strong>Smart Suggestions:</strong> After matching, you'll see suggested next tests to narrow down between close matches.</li>
+                    <li><strong>Tree Mode:</strong> If you prefer step-by-step questions, switch to the Dichotomous Tree.</li>
+                    <li><strong>Unknowns:</strong> Leave fields as "Not tested" - the app only scores what you know.</li>
+                </ul>
+            </section>
+            <section class="card">
+                <div class="card-header">
+                    <h2>Common Tests</h2>
+                </div>
+                <dl class="test-definitions">
+                    <div>
+                        <dt>Gram Stain</dt>
+                        <dd>Classifies bacteria as Gram-positive or Gram-negative</dd>
+                    </div>
+                    <div>
+                        <dt>Catalase</dt>
+                        <dd>Bubbles with H₂O₂ indicate catalase production</dd>
+                    </div>
+                    <div>
+                        <dt>Oxidase</dt>
+                        <dd>Purple color indicates cytochrome c oxidase</dd>
+                    </div>
+                    <div>
+                        <dt>Coagulase</dt>
+                        <dd>Clot formation (important for Staphylococcus spp.)</dd>
+                    </div>
+                    <div>
+                        <dt>MacConkey</dt>
+                        <dd>LF (pink) vs NLF (colorless)</dd>
+                    </div>
+                    <div>
+                        <dt>Indole/MR/VP/Citrate</dt>
+                        <dd>IMViC panel for Enterobacteriaceae</dd>
+                    </div>
+                    <div>
+                        <dt>H₂S/Motility</dt>
+                        <dd>Key for NLF enterics and Proteus</dd>
+                    </div>
+                </dl>
+            </section>
+        </aside>
+    </main>
+
+    <footer class="app-footer">
+        <p>Educational tool for microbiology orientation. Results are probabilistic and require confirmation.</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
